@@ -10,17 +10,22 @@
 --      Включити тільки лекторів
 --      Результат відсортувати за:
 --          - оцінкою (зростання), потім за назвою групи, потім за іменем студента, потім за назвою курсу
-
 -- Рішення:
-SELECT p.first_name || ' ' || p.last_name AS student_name, sg.name AS group_name,
-       c.name AS course_name, e.grade, pers.first_name || ' ' || pers.last_name AS lecturer_name
-FROM student s
-         LEFT JOIN person p ON p.person_id = s.person_id
-         LEFT JOIN student_group sg ON sg.group_id = s.group_id
-         LEFT JOIN enrolment e ON e.student_id = s.student_id
-         LEFT JOIN course c ON c.course_id = e.course_id
-         LEFT JOIN course_teacher cs ON cs.course_id = c.course_id
-         LEFT JOIN professor prof ON prof.professor_id = cs.professor_id
-         LEFT JOIN person pers ON pers.person_id = prof.person_id
-WHERE e.grade < 60 AND e.grade IS NOT NULL AND cs.professor_role = 'лектор'
-ORDER BY e.grade ASC, sg.name, student_name, course_name
+SELECT concat(pst.first_name,' ', pst.last_name) AS student_name,
+       sg.group_name,
+	   c.course_name,
+	   e.grade,
+	   concat(ppr.first_name,' ', ppr.last_name) AS lecturer_name
+FROM enrolment e 
+INNER JOIN student st ON st.student_id = e.student_id
+INNER JOIN course c ON c.course_id = e.course_id
+INNER JOIN student_group_assignment sga ON sga.student_id = st.student_id
+INNER JOIN student_group sg ON sg.group_id = sga.group_id
+INNER JOIN course_teacher ct ON ct.course_id = c.course_id
+INNER JOIN professor pr ON pr.professor_id = ct.professor_id
+INNER JOIN person pst ON st.person_id = pst.person_id
+INNER JOIN person ppr ON pr.person_id = ppr.person_id
+WHERE professor_role= 'lecturer'
+      AND grade < 60
+	  AND grade IS NOT NULL
+ORDER BY grade, group_name, student_name, course_name
